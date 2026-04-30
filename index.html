@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<title>Innocrete Infra Solution – Construction Equipment Rental</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #2A7BC9;
+    --blue-dark: #1A4F8A;
+    --blue-light: #5BA3E0;
+    --steel: #1C2B3A;
+    --steel-mid: #2E3F50;
+    --steel-light: #4A607A;
+    --gold: #F0A500;
+    --white: #F4F7FA;
+    --text: #CBD5E1;
+    --text-dim: #8899AA;
+  }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--steel);
+    color: var(--white);
+    overflow-x: hidden;
+  }
+
+  /* ===== NAV ===== */
+  nav {
+    position: fixed; top: 0; width: 100%; z-index: 1000;
+    background: rgba(18,28,38,0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(42,123,201,0.3);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 40px; height: 70px;
+  }
+  .nav-logo { display: flex; align-items: center; gap: 12px; }
+  .nav-logo img { height: 46px; }
+  .nav-links { display: flex; gap: 36px; list-style: none; }
+  .nav-links a {
+    font-family: 'Rajdhani', sans-serif; font-weight: 600;
+    font-size: 15px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--text); text-decoration: none;
+    transition: color .25s;
+    position: relative;
+  }
+  .nav-links a::after {
+    content: ''; position: absolute; bottom: -4px; left: 0;
+    width: 0; height: 2px; background: var(--blue);
+    transition: width .3s;
+  }
+  .nav-links a:hover { color: var(--blue-light); }
+  .nav-links a:hover::after { width: 100%; }
+  .nav-cta {
+    background: var(--blue); color: #fff;
+    padding: 9px 22px; border-radius: 3px;
+    font-family: 'Rajdhani', sans-serif; font-weight: 700;
+    font-size: 14px; letter-spacing: 1.5px; text-transform: uppercase;
+    text-decoration: none; transition: background .25s;
+  }
+  .nav-cta:hover { background: var(--blue-dark); }
+
+  /* ===== PAGES ===== */
+  .page { display: none; padding-top: 70px; }
+  .page.active { display: block; }
+
+  /* ===== HERO ===== */
+  #hero {
+    position: relative; height: 100vh; min-height: 640px;
+    display: flex; align-items: center;
+    overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background:
+      linear-gradient(135deg, rgba(18,28,48,0.92) 0%, rgba(26,79,138,0.55) 50%, rgba(18,28,38,0.90) 100%),
+      url('https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1600&q=80') center/cover no-repeat;
+  }
+  .hero-bg::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(42,123,201,0.04) 60px, rgba(42,123,201,0.04) 61px),
+                repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(42,123,201,0.04) 60px, rgba(42,123,201,0.04) 61px);
+  }
+  .hero-content {
+    position: relative; z-index: 2;
+    max-width: 1200px; margin: 0 auto; padding: 0 40px;
+    width: 100%;
+  }
+  .hero-eyebrow {
+    font-family: 'Rajdhani', sans-serif; font-weight: 600;
+    font-size: 13px; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--blue-light); margin-bottom: 18px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .hero-eyebrow::before {
+    content: ''; display: inline-block; width: 32px; height: 2px; background: var(--blue);
+  }
+  .hero-headline {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(52px, 8vw, 96px);
+    font-weight: 900; line-height: 0.95;
+    text-transform: uppercase;
+    letter-spacing: -1px;
+    animation: fadeUp 0.8s ease both;
+  }
+  .hero-headline span { color: var(--blue); }
+  .hero-sub {
+    font-size: 18px; font-weight: 300; color: var(--text);
+    max-width: 560px; margin-top: 22px; line-height: 1.7;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+  .hero-pills {
+    display: flex; gap: 12px; margin-top: 28px; flex-wrap: wrap;
+    animation: fadeUp 0.8s 0.35s ease both;
+  }
+  .pill {
+    background: rgba(42,123,201,0.15);
+    border: 1px solid rgba(42,123,201,0.4);
+    border-radius: 2px;
+    padding: 7px 18px;
+    font-family: 'Rajdhani', sans-serif; font-weight: 600;
+    font-size: 13px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--blue-light);
+  }
+  .hero-actions {
+    display: flex; gap: 16px; margin-top: 36px; flex-wrap: wrap;
+    animation: fadeUp 0.8s 0.5s ease both;
+  }
+  .btn-primary {
+    background: var(--blue); color: #fff;
+    padding: 14px 34px; border-radius: 3px;
+    font-family: 'Rajdhani', sans-serif; font-weight: 700;
+    font-size: 15px; letter-spacing: 2px; text-transform: uppercase;
+    text-decoration: none; border: none; cursor: pointer;
+    transition: background .25s, transform .2s;
+    display: inline-block;
+  }
+  .btn-primary:hover { background: var(--blue-dark); transform: translateY(-2px); }
+  .btn-outline {
+    background: transparent; color: var(--white);
+    padding: 14px 34px; border-radius: 3px;
+    font-family: 'Rajdhani', sans-serif; font-weight: 700;
+    font-size: 15px; letter-spacing: 2px; text-transform: uppercase;
+    text-decoration: none; border: 1px solid rgba(255,255,255,0.3); cursor: pointer;
+    transition: border-color .25s, color .25s, transform .2s;
+    display: inline-block;
+  }
+  .btn-outline:hover { border-color: var(--blue); color: var(--blue-light); transform: translateY(-2px); }
+
+  .hero-stats {
+    position: absolute; bottom: 40px; right: 40px; z-index: 2;
+    display: flex; gap: 40px;
+    animation: fadeUp 0.8s 0.6s ease both;
+  }
+  .stat-item { text-align: center; }
+  .stat-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 42px; font-weight: 800; color: var(--blue);
+    line-height: 1;
+  }
+  .stat-label {
+    font-family: 'Rajdhani', sans-serif; font-size: 11px;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  /* ===== PARTNERS STRIP ===== */
+  .partners-strip {
+    background: rgba(255,255,255,0.04);
+    border-top: 1px solid rgba(42,123,201,0.2);
+    border-bottom: 1px solid rgba(42,123,201,0.2);
+    padding: 22px 40px;
+    display: flex; align-items: center; justify-content: center; gap: 50px;
+    overflow: hidden;
+  }
+  .partners-label {
+    font-family: 'Rajdhani', sans-serif; font-weight: 600;
+    font-size: 12px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--text-dim); white-space: nowrap;
+  }
+  .partner-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 20px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    transition: color .3s;
+  }
+  .partner-name:hover { color: var(--blue-light); }
+
+  /* ===== SECTIONS ===== */
+  section { padding: 90px 40px; max-width: 1200px; margin: 0 auto; }
+  .section-tag {
+    font-family: 'Rajdhani', sans-serif; font-weight: 600;
+    font-size: 12px; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--blue); margin-bottom: 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-tag::before { content: ''; width: 24px; height: 2px; background: var(--blue); }
+  .section-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(36px, 5vw, 56px);
+    font-weight: 800; line-height: 1.05;
+    text-transform: uppercase; letter-spacing: -0.5px;
+    margin-bottom: 20px;
+  }
+  .section-title span { color: var(--blue); }
+  .section-body { font-size: 16px; font-weight: 300; color: var(--text); line-height: 1.8; max-width: 660px; }
+
+  /* ===== SERVICES ===== */
+  .services-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2px; margin-top: 50px;
+    border: 2px solid rgba(42,123,201,0.2);
+  }
+  .service-card {
+    background: var(--steel-mid);
+    padding: 36px 30px;
+    position: relative; overflow: hidden;
+    transition: background .3s;
+    cursor: default;
+  }
+  .service-card::before {
+    content: ''; position: absolute; top: 0; left: 0;
+    width: 0; height: 3px; background: var(--blue);
+    transition: width .4s;
+  }
+  .service-card:hover { background: rgba(42,123,201,0.1); }
+  .service-card:hover::before { width: 100%; }
+  .service-icon {
+    font-size: 36px; margin-bottom: 18px;
+    display: block;
+  }
+  .service-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 10px;
+  }
+  .service-desc { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
+  .service-number {
+    position: absolute; right: 20px; bottom: 16px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 60px; font-weight: 900; color: rgba(42,123,201,0.07);
+    line-height: 1;
+  }
+
+  /* ===== EQUIPMENT LIST ===== */
+  .equipment-section { background: rgba(0,0,0,0.2); padding: 90px 0; }
+  .equipment-section > section { padding-top: 0; padding-bottom: 0; }
+  .equipment-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px; margin-top: 50px;
+  }
+  .equip-card {
+    background: linear-gradient(135deg, var(--steel-mid) 0%, rgba(42,123,201,0.08) 100%);
+    border: 1px solid rgba(42,123,201,0.2);
+    border-radius: 4px; padding: 24px 20px;
+    display: flex; align-items: center; gap: 14px;
+    transition: border-color .3s, transform .2s;
+  }
+  .equip-card:hover { border-color: var(--blue); transform: translateY(-3px); }
+  .equip-icon { font-size: 28px; }
+  .equip-name {
+    font-family: 'Rajdhani', sans-serif; font-weight: 600;
+    font-size: 15px; letter-spacing: 0.5px; text-transform: uppercase;
+    color: var(--white);
+  }
+
+  /* ===== ABOUT ===== */
+  .about-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+  .about-visual {
+    position: relative;
+    background: linear-gradient(135deg, rgba(42,123,201,0.2) 0%, rgba(26,79,138,0.3) 100%);
+    border: 1px solid rgba(42,123,201,0.3);
+    border-radius: 4px; padding: 40px;
+    min-height: 380px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .about-badge {
+    text-align: center;
+  }
+  .about-badge-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 90px; font-weight: 900; color: var(--blue);
+    line-height: 1; display: block;
+  }
+  .about-badge-text {
+    font-family: 'Rajdhani', sans-serif; font-size: 16px;
+    letter-spacing: 3px; text-transform: uppercase; color: var(--text);
+  }
+  .about-corner {
+    position: absolute; width: 40px; height: 40px;
+    border-color: var(--blue); border-style: solid;
+  }
+  .about-corner.tl { top: -1px; left: -1px; border-width: 3px 0 0 3px; }
+  .about-corner.br { bottom: -1px; right: -1px; border-width: 0 3px 3px 0; }
+  .about-features { margin-top: 30px; display: flex; flex-direction: column; gap: 14px; }
+  .about-feature {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 14px 18px;
+    background: rgba(42,123,201,0.07);
+    border-left: 3px solid var(--blue);
+  }
+  .about-feature-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+  .about-feature-text { font-size: 14px; color: var(--text); line-height: 1.6; }
+  .about-feature-title { font-weight: 600; color: var(--white); font-size: 15px; }
+
+  /* ===== WHY US ===== */
+  .why-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 24px; margin-top: 50px;
+  }
+  .why-card {
+    padding: 32px 26px;
+    border: 1px solid rgba(42,123,201,0.15);
+    border-radius: 4px;
+    position: relative;
+    background: linear-gradient(160deg, rgba(42,123,201,0.06) 0%, transparent 60%);
+    transition: border-color .3s;
+  }
+  .why-card:hover { border-color: rgba(42,123,201,0.5); }
+  .why-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 48px; font-weight: 900; color: rgba(42,123,201,0.2);
+    line-height: 1; margin-bottom: 8px;
+  }
+  .why-title {
+    font-family: 'Rajdhani', sans-serif; font-weight: 700;
+    font-size: 18px; text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 10px; color: var(--white);
+  }
+  .why-desc { font-size: 13px; color: var(--text-dim); line-height: 1.7; }
+
+  /* ===== ENQUIRY FORM ===== */
+  #enquiry-page { background: var(--steel); }
+  .enquiry-hero {
+    background: linear-gradient(135deg, var(--steel) 0%, var(--steel-mid) 100%);
+    border-bottom: 1px solid rgba(42,123,201,0.2);
+    padding: 60px 40px 50px;
+    text-align: center;
+  }
+  .enquiry-form-wrap {
+    max-width: 800px; margin: 0 auto; padding: 60px 40px;
+  }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .form-full { grid-column: 1 / -1; }
+  .form-group { display: flex; flex-direction: column; gap: 8px; }
+  .form-label {
+    font-family: 'Rajdhani', sans-serif; font-weight: 600;
+    font-size: 12px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--blue-light);
+  }
+  .form-input, .form-select, .form-textarea {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(42,123,201,0.25);
+    border-radius: 3px; padding: 13px 16px;
+    color: var(--white); font-family: 'Barlow', sans-serif; font-size: 15px;
+    transition: border-color .25s, background .25s;
+    outline: none; width: 100%;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--blue);
+    background: rgba(42,123,201,0.08);
+  }
+  .form-select { cursor: pointer; }
+  .form-select option { background: var(--steel-mid); }
+  .form-textarea { resize: vertical; min-height: 120px; }
+  .form-submit {
+    width: 100%; padding: 16px;
+    background: var(--blue); color: #fff; border: none; border-radius: 3px;
+    font-family: 'Barlow Condensed', sans-serif; font-size: 18px;
+    font-weight: 700; letter-spacing: 3px; text-transform: uppercase;
+    cursor: pointer; transition: background .25s, transform .2s;
+    margin-top: 10px;
+  }
+  .form-submit:hover { background: var(--blue-dark); transform: translateY(-2px); }
+  .form-submit:disabled { background: var(--steel-light); cursor: not-allowed; transform: none; }
+  .form-note {
+    font-size: 13px; color: var(--text-dim); text-align: center; margin-top: 12px;
+  }
+  .success-msg {
+    display: none;
+    background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.4);
+    border-radius: 4px; padding: 20px 24px; text-align: center;
+    color: #86EFAC; font-weight: 500; margin-top: 20px;
+  }
+  .error-msg {
+    display: none;
+    background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.4);
+    border-radius: 4px; padding: 20px 24px; text-align: center;
+    color: #FCA5A5; font-weight: 500; margin-top: 20px;
+  }
+
+  /* ===== FOOTER ===== */
+  footer {
+    background: rgba(0,0,0,0.4);
+    border-top: 1px solid rgba(42,123,201,0.2);
+    padding: 48px 40px 28px;
+    text-align: center;
+  }
+  .footer-logo { height: 52px; margin-bottom: 18px; }
+  .footer-tagline {
+    font-family: 'Rajdhani', sans-serif; font-size: 14px;
+    letter-spacing: 3px; text-transform: uppercase; color: var(--text-dim);
+    margin-bottom: 28px;
+  }
+  .footer-links { display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; margin-bottom: 28px; }
+  .footer-links a {
+    font-size: 13px; color: var(--text-dim); text-decoration: none;
+    letter-spacing: 1px; text-transform: uppercase;
+    font-family: 'Rajdhani', sans-serif; font-weight: 600;
+    transition: color .2s;
+  }
+  .footer-links a:hover { color: var(--blue-light); }
+  .footer-copy { font-size: 12px; color: rgba(255,255,255,0.2); letter-spacing: 1px; }
+
+  /* ===== ANIMATIONS ===== */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(28px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 768px) {
+    nav { padding: 0 20px; }
+    .nav-links { display: none; }
+    section { padding: 60px 20px; }
+    .hero-content { padding: 0 20px; }
+    .hero-stats { position: static; margin-top: 40px; justify-content: center; }
+    .about-layout { grid-template-columns: 1fr; gap: 40px; }
+    .why-grid { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .partners-strip { gap: 24px; flex-wrap: wrap; }
+    .enquiry-form-wrap { padding: 40px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <img src="/mnt/user-data/uploads/INNOCRETE_logo.jpg" alt="Innocrete Infra Solution" onerror="this.style.display='none'; this.nextSibling.style.display='block'">
+    <span style="display:none; font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:22px; color:#fff; letter-spacing:1px;">INNOCRETE</span>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#" onclick="showPage('home')">Home</a></li>
+    <li><a href="#" onclick="showPage('home'); setTimeout(()=>document.getElementById('services-sec').scrollIntoView({behavior:'smooth'}),100)">Services</a></li>
+    <li><a href="#" onclick="showPage('home'); setTimeout(()=>document.getElementById('equipment-sec').scrollIntoView({behavior:'smooth'}),100)">Equipment</a></li>
+    <li><a href="#" onclick="showPage('home'); setTimeout(()=>document.getElementById('about-sec').scrollIntoView({behavior:'smooth'}),100)">About</a></li>
+    <li><a href="#" onclick="showPage('enquiry')">Enquiry</a></li>
+  </ul>
+  <a href="#" class="nav-cta" onclick="showPage('enquiry'); return false;">Get Quote</a>
+</nav>
+
+<!-- ===== HOME PAGE ===== -->
+<div id="home-page" class="page active">
+
+  <!-- HERO -->
+  <div id="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+      <div class="hero-eyebrow">Innocrete Infra Solution &nbsp;·&nbsp; Building Nation</div>
+      <h1 class="hero-headline">
+        Reliable.<br>
+        <span>Responsive.</span><br>
+        Ready.
+      </h1>
+      <p class="hero-sub">Our expertise lies in the provision of construction materials, state-of-the-art equipment, concrete solutions, skilled manpower, and comprehensive general contracting services.</p>
+      <div class="hero-pills">
+        <span class="pill">Pump Machinery</span>
+        <span class="pill">Transit Mixers</span>
+        <span class="pill">Concrete Equipment</span>
+        <span class="pill">General Contracting</span>
+      </div>
+      <div class="hero-actions">
+        <a href="#" class="btn-primary" onclick="showPage('enquiry'); return false;">Enquire Now</a>
+        <a href="#" class="btn-outline" onclick="document.getElementById('services-sec').scrollIntoView({behavior:'smooth'}); return false;">Our Services</a>
+      </div>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-num">500+</div>
+        <div class="stat-label">Projects Done</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">50+</div>
+        <div class="stat-label">Equipment Units</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">10+</div>
+        <div class="stat-label">Years Experience</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PARTNERS -->
+  <div class="partners-strip">
+    <span class="partners-label">Trusted by</span>
+    <span class="partner-name">ACC</span>
+    <span class="partner-name">RDC</span>
+    <span class="partner-name">UltraTech</span>
+    <span class="partner-name">Infra Market</span>
+    <span class="partner-name">JK Cement</span>
+    <span class="partner-name">Prism Jhonson</span>
+  </div>
+
+  <!-- SERVICES -->
+  <section id="services-sec">
+    <div class="section-tag">What We Do</div>
+    <h2 class="section-title">Core <span>Services</span></h2>
+    <p class="section-body">We provide end-to-end infrastructure solutions for major concrete manufacturers and construction companies across India.</p>
+    <div class="services-grid">
+      <div class="service-card">
+        <span class="service-icon">🏗️</span>
+        <div class="service-name">Equipment Rental</div>
+        <div class="service-desc">Flexible short and long-term rental of concrete pumps, transit mixers, batching plants and more to match your project scale.</div>
+        <span class="service-number">01</span>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">🧱</span>
+        <div class="service-name">Concrete Solutions</div>
+        <div class="service-desc">Ready-mix concrete, admixtures, and concrete placement services tailored to structural requirements and project timelines.</div>
+        <span class="service-number">02</span>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">🔧</span>
+        <div class="service-name">General Contracting</div>
+        <div class="service-desc">Full-scope construction contracting services including civil works, structural frameworks, and finishing solutions.</div>
+        <span class="service-number">03</span>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">👷</span>
+        <div class="service-name">Skilled Manpower</div>
+        <div class="service-desc">Certified machine operators, site supervisors, and specialist labor deployed to maintain efficiency and safety standards.</div>
+        <span class="service-number">04</span>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">🚛</span>
+        <div class="service-name">Material Supply</div>
+        <div class="service-desc">Procurement and timely delivery of quality construction materials including TMT bars, cement, aggregates, and additives.</div>
+        <span class="service-number">05</span>
+      </div>
+      <div class="service-card">
+        <span class="service-icon">🛠️</span>
+        <div class="service-name">Maintenance & Support</div>
+        <div class="service-desc">On-site technical support, preventive maintenance, and 24/7 breakdown assistance for all rented equipment.</div>
+        <span class="service-number">06</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- EQUIPMENT -->
+  <div class="equipment-section" id="equipment-sec">
+    <section>
+      <div class="section-tag">Our Fleet</div>
+      <h2 class="section-title">Equipment <span>Available</span></h2>
+      <p class="section-body">State-of-the-art machinery available for rental, maintained to the highest operational standards for peak performance on site.</p>
+      <div class="equipment-grid">
+        <div class="equip-card"><span class="equip-icon">🚰</span><span class="equip-name">Concrete Pump</span></div>
+        <div class="equip-card"><span class="equip-icon">🚛</span><span class="equip-name">Transit Mixer (TMC)</span></div>
+        <div class="equip-card"><span class="equip-icon">⚙️</span><span class="equip-name">Batching Plant</span></div>
+        <div class="equip-card"><span class="equip-icon">🏚️</span><span class="equip-name">Tower Crane</span></div>
+        <div class="equip-card"><span class="equip-icon">🔩</span><span class="equip-name">Bar Bending Machine</span></div>
+        <div class="equip-card"><span class="equip-icon">🌀</span><span class="equip-name">Concrete Mixer</span></div>
+        <div class="equip-card"><span class="equip-icon">📡</span><span class="equip-name">Boom Placer</span></div>
+        <div class="equip-card"><span class="equip-icon">🏗️</span><span class="equip-name">Crawler Crane</span></div>
+        <div class="equip-card"><span class="equip-icon">🚜</span><span class="equip-name">Excavator</span></div>
+        <div class="equip-card"><span class="equip-icon">🔧</span><span class="equip-name">Vibrator Needle</span></div>
+        <div class="equip-card"><span class="equip-icon">🏁</span><span class="equip-name">Formwork System</span></div>
+        <div class="equip-card"><span class="equip-icon">🚚</span><span class="equip-name">Tipper / Dumper</span></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ABOUT -->
+  <section id="about-sec">
+    <div class="about-layout">
+      <div>
+        <div class="section-tag">About Us</div>
+        <h2 class="section-title">Your <span>One-Stop</span> Construction Partner</h2>
+        <p class="section-body">Innocrete Infra Solution serves as your all-encompassing destination for fulfilling all your construction material needs. Leveraging cutting-edge manufacturing facilities on a global scale, we bring about a transformation in construction products spanning from the foundational stage to the finishing touches. Our offerings encompass a diverse range of building materials and advanced construction equipment.</p>
+        <div class="about-features">
+          <div class="about-feature">
+            <span class="about-feature-icon">✅</span>
+            <div>
+              <div class="about-feature-title">Pan-India Reach</div>
+              <div class="about-feature-text">Serving major concrete companies across India with on-time delivery and professional execution.</div>
+            </div>
+          </div>
+          <div class="about-feature">
+            <span class="about-feature-icon">🏆</span>
+            <div>
+              <div class="about-feature-title">Industry Certified</div>
+              <div class="about-feature-text">All equipment meets safety norms. Our team is trained and certified for large-scale operations.</div>
+            </div>
+          </div>
+          <div class="about-feature">
+            <span class="about-feature-icon">⚡</span>
+            <div>
+              <div class="about-feature-title">Rapid Deployment</div>
+              <div class="about-feature-text">Fast mobilization of equipment and crew to minimize downtime and keep projects on schedule.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="about-visual">
+        <div class="about-corner tl"></div>
+        <div class="about-corner br"></div>
+        <div class="about-badge">
+          <span class="about-badge-num">10+</span>
+          <span class="about-badge-text">Years of<br>Excellence</span>
+          <div style="margin-top: 28px; color: var(--text-dim); font-size: 14px; line-height: 1.9;">
+            🏗️ &nbsp;Construction Equipment<br>
+            🧱 &nbsp;Concrete Solutions<br>
+            🔧 &nbsp;General Contracting<br>
+            👷 &nbsp;Skilled Manpower
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY US -->
+  <div style="background: rgba(0,0,0,0.2); padding: 1px 0;">
+    <section>
+      <div class="section-tag">Why Choose Us</div>
+      <h2 class="section-title">Built on <span>Trust</span> &amp; Performance</h2>
+      <div class="why-grid">
+        <div class="why-card">
+          <div class="why-num">01</div>
+          <div class="why-title">Proven Track Record</div>
+          <div class="why-desc">500+ projects delivered for top cement brands like ACC, RDC, and UltraTech with zero project abandonment.</div>
+        </div>
+        <div class="why-card">
+          <div class="why-num">02</div>
+          <div class="why-title">Modern Fleet</div>
+          <div class="why-desc">All equipment is less than 5 years old, regularly serviced, and comes with operator and maintenance crew.</div>
+        </div>
+        <div class="why-card">
+          <div class="why-num">03</div>
+          <div class="why-title">Flexible Rental Terms</div>
+          <div class="why-desc">Daily, monthly, or project-based rentals designed to suit large contractors and SME builders alike.</div>
+        </div>
+        <div class="why-card">
+          <div class="why-num">04</div>
+          <div class="why-title">24×7 Support</div>
+          <div class="why-desc">Round-the-clock helpdesk and on-site emergency support to keep your project running without interruption.</div>
+        </div>
+        <div class="why-card">
+          <div class="why-num">05</div>
+          <div class="why-title">Competitive Pricing</div>
+          <div class="why-desc">Transparent, market-competitive rates with no hidden charges. Volume discounts for long-term contracts.</div>
+        </div>
+        <div class="why-card">
+          <div class="why-num">06</div>
+          <div class="why-title">One-Stop Solution</div>
+          <div class="why-desc">From raw materials to machinery to manpower — everything sourced and managed by one reliable partner.</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- CTA BANNER -->
+  <div style="background: linear-gradient(135deg, var(--blue-dark) 0%, var(--blue) 100%); padding: 70px 40px; text-align: center;">
+    <div style="font-family:'Barlow Condensed',sans-serif; font-size: clamp(32px,5vw,52px); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px;">Ready to Start Your Project?</div>
+    <p style="font-size: 17px; font-weight: 300; color: rgba(255,255,255,0.85); margin-bottom: 32px;">Get in touch with our team and we'll help you find the right equipment and services for your needs.</p>
+    <a href="#" class="btn-primary" onclick="showPage('enquiry'); return false;" style="background:#fff; color: var(--blue-dark); font-size:16px;">Send Enquiry</a>
+  </div>
+
+</div><!-- /home-page -->
+
+<!-- ===== ENQUIRY PAGE ===== -->
+<div id="enquiry-page" class="page">
+  <div class="enquiry-hero">
+    <div class="section-tag" style="justify-content:center;">Contact Us</div>
+    <h1 class="section-title" style="text-align:center;">Equipment <span>Enquiry</span></h1>
+    <p style="color:var(--text-dim); font-size:16px; max-width:520px; margin:0 auto; line-height:1.7;">Fill in the details below and our team will respond within 24 hours with availability and pricing.</p>
+  </div>
+  <div class="enquiry-form-wrap">
+    <form id="enquiryForm" onsubmit="submitEnquiry(event)">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input type="text" class="form-input" id="fname" placeholder="e.g. Rajesh Kumar" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Company Name</label>
+          <input type="text" class="form-input" id="company" placeholder="e.g. ACC Limited">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address *</label>
+          <input type="email" class="form-input" id="femail" placeholder="you@company.com" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone Number *</label>
+          <input type="tel" class="form-input" id="fphone" placeholder="+91 XXXXX XXXXX" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Type of Machinery *</label>
+          <select class="form-select" id="fmachinery" required>
+            <option value="" disabled selected>Select machinery type</option>
+            <option value="Concrete Pump">Concrete Pump</option>
+            <option value="Transit Mixer (TMC)">Transit Mixer (TMC)</option>
+            <option value="Batching Plant">Batching Plant</option>
+            <option value="Tower Crane">Tower Crane</option>
+            <option value="Boom Placer">Boom Placer</option>
+            <option value="Excavator">Excavator</option>
+            <option value="Bar Bending Machine">Bar Bending Machine</option>
+            <option value="Concrete Mixer">Concrete Mixer</option>
+            <option value="Crawler Crane">Crawler Crane</option>
+            <option value="Tipper / Dumper">Tipper / Dumper</option>
+            <option value="Multiple / Other">Multiple / Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Quantity Required *</label>
+          <input type="number" class="form-input" id="fquantity" placeholder="e.g. 2" min="1" required>
+        </div>
+        <div class="form-group form-full">
+          <label class="form-label">Project Location</label>
+          <input type="text" class="form-input" id="flocation" placeholder="e.g. Mumbai, Maharashtra">
+        </div>
+        <div class="form-group form-full">
+          <label class="form-label">Enquiry Details *</label>
+          <textarea class="form-textarea" id="fmessage" placeholder="Describe your project requirements, rental duration, site conditions, and any other relevant details..." required></textarea>
+        </div>
+      </div>
+      <button type="submit" class="form-submit" id="submitBtn">Submit Enquiry</button>
+      <p class="form-note">Your enquiry will be saved and our team will contact you within 24 hours.</p>
+      <div class="success-msg" id="successMsg">
+        ✅ &nbsp;<strong>Enquiry submitted successfully!</strong> Our team will reach out to you within 24 hours.
+      </div>
+      <div class="error-msg" id="errorMsg">
+        ❌ &nbsp;<strong>Submission failed.</strong> Please try again or contact us directly.
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- FOOTER (on both pages) -->
+<footer>
+  <img src="/mnt/user-data/uploads/INNOCRETE_logo.jpg" class="footer-logo" alt="Innocrete" onerror="this.style.display='none'">
+  <div class="footer-tagline">Innocrete Infra Solution &nbsp;·&nbsp; Building Nation</div>
+  <div class="footer-links">
+    <a href="#" onclick="showPage('home')">Home</a>
+    <a href="#" onclick="showPage('home'); setTimeout(()=>document.getElementById('services-sec').scrollIntoView({behavior:'smooth'}),100)">Services</a>
+    <a href="#" onclick="showPage('home'); setTimeout(()=>document.getElementById('equipment-sec').scrollIntoView({behavior:'smooth'}),100)">Equipment</a>
+    <a href="#" onclick="showPage('home'); setTimeout(()=>document.getElementById('about-sec').scrollIntoView({behavior:'smooth'}),100)">About</a>
+    <a href="#" onclick="showPage('enquiry')">Enquiry</a>
+  </div>
+  <div class="footer-copy">© 2025 Innocrete Infra Solution. All rights reserved. &nbsp;·&nbsp; Construction Equipment · Concrete · General Contracting</div>
+</footer>
+
+<script>
+  // ===== SUPABASE CONFIG — replace with your actual keys =====
+  const SUPABASE_URL = 'https://voctldctdyfyhodycvyk.supabase.co/rest/v1/';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZvY3RsZGN0ZHlmeWhvZHljdnlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzE2MjIsImV4cCI6MjA5MzE0NzYyMn0.S0ouV0wdLqZE_eXaUE8LXdxj7BfDV9-XZMDD-YXvB00';
+
+  const { createClient } = supabase;
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // Page Navigation
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(name + '-page').classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return false;
+  }
+
+  // Form Submission → Supabase
+  async function submitEnquiry(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const successMsg = document.getElementById('successMsg');
+    const errorMsg = document.getElementById('errorMsg');
+
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+    successMsg.style.display = 'none';
+    errorMsg.style.display = 'none';
+
+    const { error } = await db.from('enquiries').insert([{
+      name:      document.getElementById('fname').value,
+      company:   document.getElementById('company').value,
+      email:     document.getElementById('femail').value,
+      phone:     document.getElementById('fphone').value,
+      machinery: document.getElementById('fmachinery').value,
+      quantity:  document.getElementById('fquantity').value,
+      location:  document.getElementById('flocation').value,
+      message:   document.getElementById('fmessage').value
+    }]);
+
+    if (error) {
+      console.error(error);
+      errorMsg.style.display = 'block';
+    } else {
+      successMsg.style.display = 'block';
+      document.getElementById('enquiryForm').reset();
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Submit Enquiry';
+  }
+</script>
+
+<!-- Apps Script Setup Instructions (hidden, for reference) -->
+<!--
+===== GOOGLE APPS SCRIPT SETUP =====
+
+1. Open your Google Sheet:
+   https://docs.google.com/spreadsheets/d/1SujE7ztGcfoL5QnWNlLp4_PU8XajMkYQYcMSCXiRXXE
+
+2. Go to Extensions → Apps Script
+
+3. Paste this code and save:
+
+function doGet(e) {
+  const sheet = SpreadsheetApp.openById('1SujE7ztGcfoL5QnWNlLp4_PU8XajMkYQYcMSCXiRXXE').getActiveSheet();
+  const p = e.parameter;
+  
+  // Add header row if sheet is empty
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(['Timestamp','Name','Company','Email','Phone','Machinery','Quantity','Location','Message']);
+  }
+  
+  sheet.appendRow([p.timestamp, p.name, p.company, p.email, p.phone, p.machinery, p.quantity, p.location, p.message]);
+  
+  return ContentService.createTextOutput(JSON.stringify({status:'ok'}))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+4. Click Deploy → New Deployment → Web App
+   - Execute as: Me
+   - Who has access: Anyone
+   - Click Deploy, copy the Web App URL
+
+5. Replace 'YOUR_APPS_SCRIPT_URL_HERE' in the script above with your URL.
+-->
+
+</body>
+</html>
